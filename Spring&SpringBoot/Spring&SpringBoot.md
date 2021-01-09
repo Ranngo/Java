@@ -593,43 +593,43 @@ IoC负责创建对象，DI负责完成对象的依赖注入，通过配置Proper
 
 ## 2.2 Spring常用注解
 
-`@EnableDiscoveryClient`：
+1、`@EnableDiscoveryClient`：
 
 * 将微服务注册到服务发现组件上，使得注册中心能够发现该服务。
 
-`@RequestBody`: 
+2、`@RequestBody`: 
 
 * 获取请求体，只支持post请求。
 
-`@SpringBootApplication`: 
+3、`@SpringBootApplication`: 
 
 * 标记主配置类，通过运行该主配置类的main方法开启Springboot。
 
-`@controller` :（注入服务）
+4、`@controller` :（注入服务）
 
 * 用于标注控制层，相当于struts中的action层。
 
-`@service` : （注入dao）
+5、`@service` : （注入dao）
 
 - 用于标注服务层，主要用来进行业务的逻辑处理。
 
-`@repository`（实现dao访问）
+6、`@repository`（实现dao访问）
 
 - 用于标注数据访问层，也可以说用于标注数据访问组件，即DAO组件。
 
-`@Component`：
+7、`@Component`：
 
 * 把普通pojo实例化到spring容器中，相当于`<bean id = "" class = "">`；`@component(“abc”)`相当于配置了`id = abc`
 
-`@ComponentScan(value="packageName")`:
+8、`@ComponentScan(value="packageName")`:
 
 * 扫描包路径下的所有`@component`标记的类，自动装载到bean容器中，value值表示包名，没有则默认扫描该类所在的包下所有的配置类
 
-`@Configuration`：
+9、`@Configuration`：
 
 * 也属于组件component，主要目的是表明当前类是一个配置类（替代配置文件），作为bean定义的源，所标记的类允许通过调用同一类中的其他@Bean方法来定义bean之间的依赖关系
 
-`@Bean `：给IoC容器中注册一个bean，类型就是返回值的类型，将方法的返回值添加到容器中，该组件的id默认使用方法名。
+10、`@Bean `：给IoC容器中注册一个bean，类型就是返回值的类型，将方法的返回值添加到容器中，该组件的id默认使用方法名。
 
 ```java
 @Bean
@@ -640,7 +640,53 @@ public Person person01() {
 }
 ```
 
+11、`@ConfigurationProperties`:
 
+* 配置属性映射，properties文件中的属性与类中的属性对应
+
+  ```java
+  @ConfigurationProperties(prefix = "mycar")
+  ```
+
+12、`@EnableConfigurationProperties`:
+
+* ```java
+  @EnableConfigurationProperties(Car.class)
+  ```
+
+  * 开启Car配置绑定，使得properties文件中的属性与类中的属性对应
+  * 将这个Car类组件自动注册到容器中
+
+13、`@import`：
+
+* 表示给容器中导入某个class。
+
+  ```java
+  @import({User.class, Student.class})
+  ```
+
+  在容器中自动创建上述两个类的组件，默认组件名为类的全限定名。
+
+14、`@EnableAutoConfiguration`：
+
+* `-> `@AutoConfigurationPackage
+
+  ```java
+  @Target({ElementType.TYPE})
+  @Retention(RetentionPolicy.RUNTIME)
+  @Documented
+  @Inherited
+  @Import({Registrar.class})
+  public @interface AutoConfigurationPackage {
+      String[] basePackages() default {};
+  
+      Class<?>[] basePackageClasses() default {};
+  }
+  ```
+
+  作用：给容器中导入组件AutoConfigurationPackages.Registrar.class，利用Registrar将主配置类（MainApplication）所在的包及其子包的所有组件扫描到容器中
+
+  
 
 <u>**@Value和@ConfigurationProperties的区别**</u>
 
@@ -719,31 +765,6 @@ public Person person01() {
 | @ConditionalOnWebApplication    | 当前是web环境                                    |
 | @ConditionalOnNotWebApplication | 当前不是web环境                                  |
 | @ConditionalOnJndi              | JNDI存在指定项                                   |
-
-`@import`：
-
-* 表示给容器中导入组件。
-
-`@EnableAutoConfiguration`：
-
-* `-> `@AutoConfigurationPackage
-
-  ```java
-  @Target({ElementType.TYPE})
-  @Retention(RetentionPolicy.RUNTIME)
-  @Documented
-  @Inherited
-  @Import({Registrar.class})
-  public @interface AutoConfigurationPackage {
-      String[] basePackages() default {};
-  
-      Class<?>[] basePackageClasses() default {};
-  }
-  ```
-
-  其中`@import`注解表示：给容器中导入组件AutoConfigurationPackages.Registrar.class
-
-  * 作用：将主配置类所在的包及其子包的所有组件扫描到容器中
 
 
 
@@ -1070,9 +1091,78 @@ springboot 启动会扫描以下位置的application.properties或者application
 
 <u>如果想要修改静态资源文件夹路径，可以在properties文件中配置`spring.resources.static-locations`属性指定，指定之后默认文件夹会失效。</u>
 
+<u>**静态资源访问前缀**</u>：
+
+对静态资源的访问都有指定的前缀
+
+```yaml
+spring:
+	mvc:
+		static-path-pattern: /res/**
+```
+
+
+
+## 2.6 模板引擎
+
+```java
+@ConfigurationProperties(prefix = "spring.thymeleaf")
+public class ThymeleafProperties {
+
+	private static final Charset DEFAULT_ENCODING = Charset.forName("UTF-8");
+
+	private static final MimeType DEFAULT_CONTENT_TYPE = MimeType.valueOf("text/html");
+
+	public static final String DEFAULT_PREFIX = "classpath:/templates/";
+
+	public static final String DEFAULT_SUFFIX = ".html";
+  	//
+```
+
+只要把HTML页面放到template文件夹下，则自动会被Thymleaf渲染
+
+使用方法：
+
+* 在HTML页面中导入名称空间：
+
+  ```html
+  <html lang="en" xmlns:th="http://www.thymeleaf.org">
+  ```
+
+* 使用Thymleaf语法：
+
+  ```html
+  <!DOCTYPE html>
+  <html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+      <meta charset="UTF-8">
+      <title>Title</title>
+  </head>
+  <body>
+      <h1>hello to somebody</h1>
+      <div th:text="${name}">显示欢迎信息</div>
+  </body>
+  </html>
+  ```
+
+* 结合Controller映射：
+
+  ```java
+  @RequestMapping("hello/{name}")
+  public String helloWho(@PathVariable("name") String id){
+      System.out.println("hello to "+id);
+      // 页面名
+      return "helloWho";
+  }
+  ```
+
+
+
 
 
 ## 2.7 SpringMvc自动配置
+
+官方文档：https://docs.spring.io/spring-boot/docs/1.5.10.RELEASE/reference/htmlsingle/#boot-features-developing-web-applications
 
 <u>**1）Spring MVCantoconfiguration**</u> 
 
@@ -1086,7 +1176,40 @@ Spring Boot自动配置好了Spring MVC
 
    - `ContentNegotiatingViewResolver` 组合所有的视图解析器
 
-   - 如何定制：给容器中添加一个视图解析器,`ContentNegotiatingViewResolver` 就会将视图解析出来
+     ```java
+     @Nullable
+     public View resolveViewName(String viewName, Locale locale) throws Exception {
+         RequestAttributes attrs = RequestContextHolder.getRequestAttributes();
+         Assert.state(attrs instanceof ServletRequestAttributes, "No current ServletRequestAttributes");
+         List<MediaType> requestedMediaTypes = this.getMediaTypes(((ServletRequestAttributes)attrs).getRequest());
+         if (requestedMediaTypes != null) {
+             // 获取候选的视图
+             List<View> candidateViews = this.getCandidateViews(viewName, locale, requestedMediaTypes);
+             // 从候选视图中取出最合适的视图
+             View bestView = this.getBestView(candidateViews, requestedMediaTypes, attrs);
+             if (bestView != null) {
+                 return bestView;
+             }
+         }
+     ```
+
+   - **如何定制**：给容器中添加一个视图解析器,  `ContentNegotiatingViewResolver` 就会将视图解析出来
+
+     ```java
+     @Bean
+     public ViewResolver myViewResolver(){
+         return new MyViewResolver();
+     }
+     
+     private static class MyViewResolver implements ViewResolver{
+         @Override
+         public View resolveViewName(String s, Locale locale) throws Exception {
+             return null;
+         }
+     }
+     ```
+
+     ![image-20201220123813560](C:/Users/li/AppData/Roaming/Typora/typora-user-images/image-20201220123813560.png)
 
 - Support for serving static resources, including support for WebJars (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-mvc-static-content))).
 
@@ -1094,13 +1217,13 @@ Spring Boot自动配置好了Spring MVC
 
 - Static `index.html` support.      静态首页访问
 
-- Custom `Favicon` support (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-mvc-favicon)).     支持定制favicon.ico
+- Custom `Favicon` support (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-mvc-favicon)).     支持定制favicon.ico图标文件
 
   
 
 - Automatic registration of `Converter`, `GenericConverter`, and `Formatter` beans.
 
-  - `Converter`:转换器 -- >public String hello(User user) :自动装载后前后端交互需要类型转换
+  - `Converter`:转换器 -- >public String hello(User user) :自动装载后，前后端交互需要类型转换
 
   - `Formatter`：格式化器--> 2020/11/11===Data,按照一定的格式进行转换
 
@@ -1108,7 +1231,7 @@ Spring Boot自动配置好了Spring MVC
      @Bean
     public FormattingConversionService mvcConversionService() {
           Format format = this.mvcProperties.getFormat();
-    	  WebConversionService conversionService = new WebConversionService((new   		   DateTimeFormatters())
+    	  WebConversionService conversionService = new WebConversionService((new DateTimeFormatters())
     	  .dateFormat(format.getDate())
     	  .timeFormat(format.getTime())
     	  .dateTimeFormat(format.getDateTime()));
@@ -1162,7 +1285,7 @@ Spring Boot自动配置好了Spring MVC
         }
     ```
 
-  - 也可以自定义HttpMessageConverter，用bean或者component的方式注册到容器中
+  - 也可以**自定义**HttpMessageConverter，用bean或者component的方式注册到容器中
 
     ```java
     import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
@@ -1186,11 +1309,11 @@ Spring Boot自动配置好了Spring MVC
 
 - Automatic use of a `ConfigurableWebBindingInitializer` bean (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-mvc-web-binding-initializer)).
 
-  可以自定`ConfigurableWebBindingInitializer` 
+  同样的，也可以自定义`ConfigurableWebBindingInitializer` ，再注册到容器中即可
 
   ```
   初始化WebDataBinder;
-  请求数据====>JavaBean
+  请求数据绑定到====>JavaBean中
   ```
 
 **org.springframework.boot.autoconfigure.web:web中的所有场景**
@@ -1213,7 +1336,7 @@ If you want to keep those Spring Boot MVC customizations and make more [MVC cust
   既保留了所有的自动配置，也能使用扩展配置
 
   ```java
-  package com.wiggin.springboot04.config;
+  package com.kkp.springboot04.config;
   
   import org.springframework.context.annotation.Configuration;
   import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
@@ -1228,7 +1351,7 @@ If you want to keep those Spring Boot MVC customizations and make more [MVC cust
       protected void addViewControllers(ViewControllerRegistry registry) {
           // super.addViewControllers(registry);
           // 效果，浏览器发送/wiggin请求，也来到success页面
-          registry.addViewController("/wiggin").setViewName("success");
+          registry.addViewController("/kkp").setViewName("success");
       }
   }
   
@@ -1283,9 +1406,21 @@ If you want to provide custom instances of `RequestMappingHandlerMapping`, `Requ
 
 
 
-If you want to take complete control of Spring MVC, you can add your own `@Configuration` annotated with `@EnableWebMvc`, or alternatively add your own `@Configuration`-annotated `DelegatingWebMvcConfiguration` as described in the Javadoc of `@EnableWebMvc`.
+**如何修改SpringBoot默认配置：**
+
+* SpringBoot在自动配置很多组件的时候，先看容器中有没有用户自己配置的（@Bean、@Component）如果有就用用户配置的，如果没有，才自动配置；如果有些组件可以有多个（ViewResolver）将用户配置的和自己默认的组合起来；
+
+* 在SpringBoot中会有非常多的xxxConfigurer帮助我们进行扩展配置 
+
+* 在SpringBoot中会有很多的xxxCustomizer帮助我们进行定制配置
+
+
 
 **<u>全面接管Spring MVC</u>**
+
+If you want to take complete control of Spring MVC, you can add your own `@Configuration` annotated with `@EnableWebMvc`, or alternatively add your own `@Configuration`-annotated `DelegatingWebMvcConfiguration` as described in the Javadoc of `@EnableWebMvc`.
+
+
 
 SpringBoot对SpringMVC的自动配置不需要s's's了，所有都是自定义配置，但需要在配置类中添加@EnableWebMvc
 
@@ -1339,3 +1474,236 @@ public class MyMvcConfig extends WebMvcConfigurer {
   ```
 
 - @EnableWebMvc全面接管了SpringMVC，但它只是最基本的功能，需要继续书写。
+
+## 2.8 国际化
+
+1. 配置需要国际化的元素：
+
+   ```xml
+   login.btn=登陆~
+   login.password=密码~
+   login.remember=记住我~
+   login.tip=请登陆~
+   login.username=用户名~
+   ```
+
+   ![image-20201220154919946](C:/Users/li/AppData/Roaming/Typora/typora-user-images/image-20201220154919946.png)
+
+2. SpringBoot自动配置好了管理国际化资源文件的组件，需要在spring配置文件中指定国际化配置文件的位置：
+
+   ```xml
+   spring.messages.basename=i18n/login
+   ```
+
+3. 使用#{}语法，修改HTML页面，获取国际化值
+
+   ```html
+   <!DOCTYPE html>
+   <html lang="en"  xmlns:th="http://www.thymeleaf.org">
+   	<head>
+   		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+   		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+   		<meta name="description" content="">
+   		<meta name="author" content="">
+   		<title>Signin Template for Bootstrap</title>
+   		<!-- Bootstrap core CSS -->
+   		<link href="asserts/css/bootstrap.min.css" th:href="@{/webjars/bootstrap/4.0.0/css/bootstrap.css}" rel="stylesheet">
+   		<!-- Custom styles for this template -->
+   		<link href="asserts/css/signin.css" th:href="@{/asserts/css/signin.css}" rel="stylesheet">
+   	</head>
+   	<body class="text-center">
+   		<form class="form-signin" action="dashboard.html" th:action="@{/user/login}" method="post">
+   			<img class="mb-4" th:src="@{/asserts/img/bootstrap-solid.svg}" src="asserts/img/bootstrap-solid.svg" alt="" width="72" height="72">
+   			<h1 class="h3 mb-3 font-weight-normal" th:text="#{login.tip}">Please sign in</h1>
+   			<!--判断-->
+   			<p style="color: red" th:text="${msg}" th:if="${not #strings.isEmpty(msg)}"></p>
+   			<label class="sr-only" th:text="#{login.username}">Username</label>
+   			<input type="text"  name="username" class="form-control" placeholder="Username" th:placeholder="#{login.username}" required="" autofocus="">
+   			<label class="sr-only" th:text="#{login.password}">Password</label>
+   			<input type="password" name="password" class="form-control" placeholder="Password" th:placeholder="#{login.password}" required="">
+   			<div class="checkbox mb-3">
+   				<label>
+   					<!-- 行内写法[[]] -->
+             			<input type="checkbox" value="remember-me"/> [[#{login.remember}]]
+           		</label>
+   			</div>
+   			<button class="btn btn-lg btn-primary btn-block" type="submit" th:text="#{login.btn}">Sign in</button>
+   			<p class="mt-5 mb-3 text-muted">© 2017-2018</p>
+   			<!--在访问按钮上添加超链接并且携带区域信息，通过信息来判断使用何种语言-->
+   			<a class="btn btn-sm" th:href="@{/index.html(l='zh_CN')}">中文</a>
+   			<a class="btn btn-sm" th:href="@{/index.html(l='en_US')}">English</a>
+   		</form>
+   	</body>
+   
+   </html>
+   ```
+
+   
+
+4. 自定义LocaleResolver
+
+   ```java
+   /**
+    * 可以在连接上携带区域信息
+    */
+   public class MyLocaleResolver implements LocaleResolver {
+       
+       @Override
+       public Locale resolveLocale(HttpServletRequest request) {
+           // 获取包含"l"的请求参数
+           String l = request.getParameter("l");
+           // 获得默认的区域信息
+           Locale locale = Locale.getDefault();
+           // 将参数分隔得到区域信息
+           if(!StringUtils.isEmpty(l)){
+               String[] split = l.split("_");
+               locale = new Locale(split[0],split[1]);
+           }
+           return locale;
+       }
+   
+       @Override
+       public void setLocale(HttpServletRequest request, HttpServletResponse response, Locale locale) {
+   
+       }
+   }
+   ```
+
+5. 在SpringMvc配置文件添加自定义的LocaleResolver到容器中
+
+   ```java
+   @Bean
+   public LocaleResolver localeResolver(){
+   
+       return new MyLocaleResolver();
+   }
+   ```
+
+   
+
+## 2.9 使用addViewController实现无业务逻辑跳转
+
+
+
+```java
+@Configuration
+public class MyMvcConfig extends WebMvcConfigurerAdapter {
+
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+       // super.addViewControllers(registry);
+        //浏览器发送 /index 请求来到 index
+        registry.addViewController("/index").setViewName("index");
+    }
+```
+
+等价于
+
+```java
+@Controller
+public class HelloController {
+
+    @RequestMapping({"/index"})
+    public String index(){
+        return "index";
+    }
+```
+
+
+
+## 2.10 登录界面
+
+* 开发期间对模板引擎的修改，如需要立即生效，应禁用缓存，并对修改后的模板ctrl+F9进行重新编译。
+
+  ```java
+  # 禁用缓存,页面修改后立即同步
+  spring.thymeleaf.cache=false 
+  ```
+
+* 用户名和密码校验
+
+  ```java
+  @Controller
+  public class LoginController {
+      @PostMapping(value = "/user/login")
+      public String login(@RequestParam("username") String username,
+                          @RequestParam("password") String password,
+                          Map<String,Object> map, HttpSession session){
+          if(!StringUtils.isEmpty(username) && "123456".equals(password)){
+              //登陆成功，防止表单重复提交，可以重定向到主页
+              session.setAttribute("loginUser",username);
+              return "redirect:/main.html";
+          }else{
+              //登陆失败
+              map.put("msg","用户名密码错误");
+              return  "login";
+          }
+      }
+  }
+  ```
+
+  如果登录错误，msg对应于模板引擎:
+
+  ```html
+  <!--判断-->
+  <p style="color: red" th:text="${msg}" th:if="${not #strings.isEmpty(msg)}"></p>
+  ```
+
+* 配置拦截器
+
+  ```java
+  public class LoginHandlerInterceptor implements HandlerInterceptor {
+      //目标方法执行之前
+      @Override
+      public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+          Object user = request.getSession().getAttribute("loginUser");
+          if(user == null){
+              //未登陆，返回登陆页面
+              request.setAttribute("msg","没有权限请先登陆");
+              request.getRequestDispatcher("/index.html").forward(request,response);
+              return false;
+          }else{
+              //已登陆，放行请求
+              return true;
+          }
+  
+      }
+  
+      @Override
+      public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+  
+      }
+  
+      @Override
+      public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+  
+      }
+  }
+  ```
+
+* 注册拦截器
+
+  ```java
+  @Bean //将组件注册在容器
+  public WebMvcConfigurerAdapter webMvcConfigurerAdapter(){
+      WebMvcConfigurerAdapter adapter = new WebMvcConfigurerAdapter() {
+          @Override
+          public void addViewControllers(ViewControllerRegistry registry) {
+              registry.addViewController("/").setViewName("login");
+              registry.addViewController("/index.html").setViewName("login");
+              registry.addViewController("/main.html").setViewName("dashboard");
+          }
+  
+          //注册拦截器
+          @Override
+          public void addInterceptors(InterceptorRegistry registry) {
+              //super.addInterceptors(registry);
+              //静态资源；  *.css , *.js
+              //SpringBoot已经做好了静态资源映射
+              registry.addInterceptor(new LoginHandlerInterceptor()).addPathPatterns("/**")
+                      .excludePathPatterns("/index.html","/","/user/login");
+          }
+      };
+      return adapter;
+  }
+  ```

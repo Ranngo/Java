@@ -135,6 +135,28 @@
    </mapper>
    ```
 
+   * 下面是insert、update和delete语句的示例：
+
+   ```xml
+   <insert id="insertAuthor">
+     insert into Author (id,username,password,email,bio)
+     values (#{id},#{username},#{password},#{email},#{bio})
+   </insert>
+   
+   <update id="updateAuthor">
+     update Author set
+       username = #{username},
+       password = #{password},
+       email = #{email},
+       bio = #{bio}
+     where id = #{id}
+   </update>
+   
+   <delete id="deleteAuthor">
+     delete from Author where id = #{id}
+   </delete>
+   ```
+
 6. 测试业务
 
    ```java
