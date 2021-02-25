@@ -174,3 +174,10 @@
 
    
 
+namespace与mapper接口的全限定名相同
+
+id与mapper接口方法名相同
+
+parameterType与接口方法的输入参数类型相同
+
+resultType与接口方法的返回值类型相同

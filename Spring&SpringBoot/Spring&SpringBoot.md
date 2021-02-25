@@ -211,7 +211,7 @@ ioC通过工厂模式创建bean的方式有两种：
 * 静态工厂方法
 * 实例工厂方法
 
-静态工厂方法：
+静态工厂方法：直接可以通过静态方法来实例化一个对象
 
 * 定义car类
 
@@ -273,6 +273,10 @@ ioC通过工厂模式创建bean的方式有两种：
   }
   ```
 
+  
+
+实例工厂方法：先创建类对象，通过对象来调用创建实例对象的方法
+
 * 定义实例工厂：
 
   ```java
@@ -291,9 +295,7 @@ ioC通过工厂模式创建bean的方式有两种：
   }
   ```
 
-* 实例工厂方法：
-
-  ```xml
+* ```xml
   <!--  配置实例工厂  -->
   <bean id="carFactory" class="com.rango.factory.InstanceCarFactory"></bean>
   
@@ -303,7 +305,7 @@ ioC通过工厂模式创建bean的方式有两种：
   </bean>
   ```
 
-  ```java
+* ```java
   public class TestInstanceFactory {
       public static void main(String[] args) {
           ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring-factory.xml");
@@ -312,6 +314,10 @@ ioC通过工厂模式创建bean的方式有两种：
       }
   }
   ```
+
+  
+
+
 
 
 
@@ -352,6 +358,8 @@ IoC负责创建对象，DI负责完成对象的依赖注入，通过配置Proper
 * 通过动态代理，将共同业务代码集成为一个代理类，该类动态生成，每次使用时调用代理类。
 
   动态代理是指利用Java的反射技术(Java Reflection)，在运行时创建一个实现某些给定接口的新类（也称“动态代理类”）及其实例（对象）,代理的是接口(Interfaces)，不是类(Class)，也不是抽象类。在运行时才知道具体的实现。
+
+  **AOP通常使用动态代理，在执行业务方法或出现异常前后时加入相关逻辑。**
 
 * 定义四则运算接口
 
@@ -686,6 +694,25 @@ public Person person01() {
 
   作用：给容器中导入组件AutoConfigurationPackages.Registrar.class，利用Registrar将主配置类（MainApplication）所在的包及其子包的所有组件扫描到容器中
 
+  * `@Target`:注解的作用目标
+  
+    **`@Target(ElementType.TYPE)`——接口、类、枚举、注解
+    `@Target(ElementType.FIELD)`——字段、枚举的常量
+    `@Target(ElementType.METHOD)`——方法
+    `@Target(ElementType.PARAMETER)`——方法参数
+    `@Target(ElementType.CONSTRUCTOR)` ——构造函数
+    `@Target(ElementType.LOCAL_VARIABLE)`——局部变量
+    `@Target(ElementType.ANNOTATION_TYPE)`——注解
+    `@Target(ElementType.PACKAGE)`——包**
+  
+  * `@Retention`：注解的保留位置
+  
+    **`RetentionPolicy.SOURCE`**:	这种类型的`Annotations`只在源代码级别保留,编译时就会被忽略,在`class`字节码文件中不包含。
+    **`RetentionPolicy.CLASS`:**	这种类型的`Annotations`编译时被保留,默认的保留策略,在`class`文件中存在,但`JVM`将会忽略,运行时无法获得。
+    **`RetentionPolicy.RUNTIME`:**	这种类型的`Annotations`将被`JVM`保留,所以他们能在运行时被`JVM`或其他使用反射机制的代码所读取和使用。
+    **`@Document`：**	说明该注解将被包含在`javadoc`中
+    **`@Inherited`：**	说明子类可以继承父类中的该注解**
+  
   
 
 <u>**@Value和@ConfigurationProperties的区别**</u>
@@ -1630,8 +1657,9 @@ public class HelloController {
                           @RequestParam("password") String password,
                           Map<String,Object> map, HttpSession session){
           if(!StringUtils.isEmpty(username) && "123456".equals(password)){
-              //登陆成功，防止表单重复提交，可以重定向到主页
+              // 设置loginUser属性对应的对象为username
               session.setAttribute("loginUser",username);
+              //登陆成功，防止表单重复提交，可以重定向到主页
               return "redirect:/main.html";
           }else{
               //登陆失败
@@ -1656,6 +1684,7 @@ public class HelloController {
       //目标方法执行之前
       @Override
       public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+          // 获取loginUser属性对应的对象
           Object user = request.getSession().getAttribute("loginUser");
           if(user == null){
               //未登陆，返回登陆页面
@@ -1707,3 +1736,38 @@ public class HelloController {
       return adapter;
   }
   ```
+
+## 2.11 ModelAndView和ModelMap详解
+
+ModelAndView包含Model属性和View属性；
+
+* Model：本质上是一个ModelMap类型，而ModelMap是LinkedHashMap的一个子类
+* View：包含一些视图信息
+
+**当添加数据时，采用ModelAndView传入数据，返回结果为对象**
+
+```java
+//使用ModelAndView传入数据，返回对象
+@RequestMapping("/test")
+public ModelAndView modelTest(String name) {
+    //构建ModelAndView实例，并设置跳转的页面路径
+    /*ModelAndView mv = new ModelAndView();
+    mv.setViewName("hello");*/
+    ModelAndView mv = new ModelAndView("hello");
+    mv.addObject("name",name);
+    return mv;
+}
+```
+
+**当添加数据时，采用ModelMap的方式传入数据，返回结果为指定的页面路径**
+
+```java
+//使用ModelMap的接口方法传入键值对，返回指定的页面路径
+@RequestMapping(value = "/test")
+public String modelTest(ModelMap model, String name) {
+    model.addAttribute("name", name);
+    return "hello";
+}
+```
+
+## 2.12 
