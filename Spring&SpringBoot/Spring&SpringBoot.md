@@ -1770,4 +1770,158 @@ public String modelTest(ModelMap model, String name) {
 }
 ```
 
-## 2.12 
+
+
+## 2.12 Maven中dependency的optional选项的意义
+
+```java
+<dependency>
+   <groupId>org.springframework.boot</groupId>
+   <artifactId>spring-boot-devtools</artifactId>
+   <optional>true</optional>
+</dependency>
+```
+
+默认为false，即该依赖可以被继承传递；
+
+当optional为true时，表示该依赖只在当前项目中生效。子项目中如果需要使用该依赖，需要另行添加。
+
+
+
+## 2.13 注册三大组件（servlet、filter、listener）
+
+* 注册自定义`servlet`
+
+  * 自定义servlet
+
+    ```java
+    public class MyServlet extends HttpServlet {
+    
+        //处理get请求
+        @Override
+        protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+            doPost(req,resp);
+        }
+        
+        //处理post请求
+        @Override
+        protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+            resp.getWriter().write("Hello MyServlet");
+        }
+    }
+    ```
+
+  * 注册servlet
+
+    ```java
+    @Bean
+    public ServletRegistrationBean myServlet(){
+        ServletRegistrationBean registrationBean = new ServletRegistrationBean(new MyServlet(),"/myServlet");
+        registrationBean.setLoadOnStartup(1);
+        return registrationBean;
+    }
+    ```
+
+* 注册自定义`filter`
+
+  * 自定义filter
+
+    ```java
+    public class MyFilter implements Filter {
+    
+        @Override
+        public void init(FilterConfig filterConfig) throws ServletException {
+    
+        }
+    
+        @Override
+        public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+            System.out.println("MyFilter process...");
+            chain.doFilter(request,response);
+    
+        }
+    
+        @Override
+        public void destroy() {
+    
+        }
+    }
+    ```
+
+  * 注册filter
+
+    ```java
+    @Bean
+    public FilterRegistrationBean myFilter(){
+        FilterRegistrationBean registrationBean = new FilterRegistrationBean();
+        registrationBean.setFilter(new MyFilter());
+        registrationBean.setUrlPatterns(Arrays.asList("/hello","/myServlet"));
+        return registrationBean;
+    }
+    ```
+
+* 注册自定义`listener`
+
+  * 自定义listener
+
+    ```java
+    public class MyListener implements ServletContextListener {
+        @Override
+        public void contextInitialized(ServletContextEvent sce) {
+            System.out.println("contextInitialized...web应用启动");
+        }
+    
+        @Override
+        public void contextDestroyed(ServletContextEvent sce) {
+            System.out.println("contextDestroyed...当前web项目销毁");
+        }
+    }
+    ```
+
+  * 注册listener
+
+    ```java
+    @Bean
+    public ServletListenerRegistrationBean myListener(){
+        ServletListenerRegistrationBean<MyListener> registrationBean = new ServletListenerRegistrationBean<>(new MyListener());
+        return registrationBean;
+    }
+    ```
+
+    
+
+## 2.14 注册handlerInterceptor拦截器
+
+* 自定义handlerInterceptor
+
+  ```java
+  public class LoginHandlerInterceptor implements HandlerInterceptor {
+      //目标方法执行之前
+      @Override
+      public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+          Object user = request.getSession().getAttribute("loginUser");
+          if(user == null){
+              //未登陆，返回登陆页面
+              request.setAttribute("msg","没有权限请先登陆");
+              request.getRequestDispatcher("/index.html").forward(request,response);
+              return false;
+          }else{
+              //已登陆，放行请求
+              return true;
+          }
+  
+      }
+  
+      @Override
+      public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
+                             ModelAndView 	modelAndView) throws Exception {
+      }
+  
+      @Override
+      public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, 
+                                  Exception ex) throws Exception {
+      }
+  }
+  ```
+
+* 注册handlerInterceptor
