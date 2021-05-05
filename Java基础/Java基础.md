@@ -78,9 +78,63 @@ class Employee implement Cloneable{
 * 实例变量：随着对象的创建而初始化，随着对象的被回收而消亡，每一个对象的实例变量都是独立的。
 * 类变量：随着类的初始化而初始化，随着类的卸载而消亡，每一个类的类变量都是共享的。
 
-## 重名处理规则
+## 4.6 重名处理规则
 
 当局部变量与**实例变量**重名时，在实例变量前加`this.`
 
 当局部变量与**类变量**重名时，在类变量前加`类名.`
+
+
+
+# 五、 序列化和反序列化
+
+序列化是指将对象转化为字节序列实现远程通信的过程，反序列化则与之相反。
+
+## 5.1 实现方式
+
+ 只有实现了Serializable或者Externalizable接口的类的对象才能被序列化为字节序列
+
+* 实现Serializable接口
+
+  使用ObjectInputStream和ObjectOutputStream两个IO工具类
+
+  * 将对象写入文件中
+
+    FileOutStream导入文件路径->包装到ObjectOutputStream中->调用writeObject方法将对象存入文件中
+
+  ![img](images/20180919090545190)
+
+  ```java
+  private static void serializeAnimal() throws Exception {
+      BlackCat black = new BlackCat("black", "我是黑猫");
+      System.out.println("序列化前："+black.toString());
+      System.out.println("=================开始序列化================");
+      ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_PATH));
+      oos.writeObject(black);
+      oos.flush();
+      oos.close();
+  ```
+
+  
+
+  * 将数据从文件中读取出来
+
+    FileInputStream导入文件路径->包装到ObjectInputStream中->调用readObject方法解析文件并转化成对象
+
+  ![img](images/20180919090621522)
+
+  ```java
+  private static void deserializeAnimal() throws Exception {
+      System.out.println("=================开始反序列化================");
+      ObjectInputStream ois = new ObjectInputStream(new FileInputStream(FILE_PATH));
+      BlackCat black = (BlackCat) ois.readObject();
+      ois.close();
+      System.out.println(black);
+  ```
+
+  
+
+* 实现Externalizable接口
+
+参考博客：https://blog.csdn.net/mocas_wang/article/details/107621010?utm_medium=distribute.pc_relevant.none-task-blog-baidujs_utm_term-1&spm=1001.2101.3001.4242
 
