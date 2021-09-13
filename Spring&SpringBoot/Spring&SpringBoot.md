@@ -1926,5 +1926,9 @@ public String modelTest(ModelMap model, String name) {
 
 * 注册handlerInterceptor
 
+## 2.15 yml配置文件优势
 
-
+* yml支持中文，格式为"[中文字符]"
+* 前缀不需要重复输入
+  * 数据类型、字符编码、localdateTime 、javaUtil.optional
+  * 函数前写注释，用处、参数等
